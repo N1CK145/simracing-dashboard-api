@@ -55,5 +55,86 @@ namespace SimRacingDashboard.Api.Controllers
                 ApiResponse<TrackDetailsDto>.Ok(dto, "Track created successfully!")
             );
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(Guid id, CreateTrackDto updatedTrack)
+        {
+            if (updatedTrack == null)
+                return BadRequest(ApiResponse<TrackDetailsDto>.Fail("Invalid track data!"));
+
+            var track = await db.Tracks.FindAsync(id);
+
+            if (track == null)
+                return NotFound();
+
+            // Check if the track already exists with the same name, location, and country
+            var trackExists = await db.Tracks.AnyAsync(existing =>
+                existing.Id != id &&
+                existing.Name == updatedTrack.Name &&
+                existing.Location == updatedTrack.Location &&
+                existing.Country == updatedTrack.Country);
+
+            if (trackExists)
+                return Conflict(ApiResponse<TrackDetailsDto>.Fail("Track with the same name, location, and country already exists!"));
+
+            // Update the track properties
+            track.LengthKm = updatedTrack.LengthKm;
+            track.LayoutVersion = updatedTrack.LayoutVersion;
+            track.Turns = updatedTrack.Turns;
+            track.Name = updatedTrack.Name;
+            track.Location = updatedTrack.Location;
+            track.Country = updatedTrack.Country;
+
+            db.Tracks.Update(track);
+            await db.SaveChangesAsync();
+
+            return Ok(ApiResponse<TrackDetailsDto>.Ok(new TrackDetailsDto(track), "Track updated successfully!"));
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Patch(Guid id, PatchTrackDto patch)
+        {
+            if (patch == null)
+                return BadRequest(ApiResponse<TrackDetailsDto>.Fail("Invalid track data!"));
+
+            var track = await db.Tracks.FindAsync(id);
+
+            if (track == null)
+                return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(patch.Name))
+                track.Name = patch.Name;
+
+            if (!string.IsNullOrWhiteSpace(patch.Location))
+                track.Location = patch.Location;
+
+            if (!string.IsNullOrWhiteSpace(patch.Country))
+                track.Country = patch.Country;
+
+            if (patch.LayoutVersion != null)
+                track.LayoutVersion = patch.LayoutVersion;
+
+            if (patch.Turns.HasValue)
+                track.Turns = patch.Turns.Value;
+
+            if (patch.LengthKm.HasValue)
+                track.LengthKm = patch.LengthKm.Value;
+
+            // Check if the track already exists with the same name, location, and country
+            var trackExists = await db.Tracks.AnyAsync(existing =>
+                existing.Id != id &&
+                existing.Name == track.Name &&
+                existing.Location == track.Location &&
+                existing.Country == track.Country &&
+                existing.LayoutVersion == track.LayoutVersion);
+
+            if (trackExists)
+                return Conflict(ApiResponse<TrackDetailsDto>.Fail("Track with the same name, location, and country already exists!"));
+
+            db.Tracks.Update(track);
+            await db.SaveChangesAsync();
+
+            return Ok(ApiResponse<TrackDetailsDto>.Ok(new TrackDetailsDto(track), "Track updated successfully!"));
+        }
     }
 }
