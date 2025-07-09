@@ -12,6 +12,7 @@ public class TrackDetailsDto
     public int? Turns { get; set; }
     public double? LengthKm { get; set; }
 
+    public TrackDetailsDto() { }
     public TrackDetailsDto(TrackModel model)
     {
         Id = model.Id;

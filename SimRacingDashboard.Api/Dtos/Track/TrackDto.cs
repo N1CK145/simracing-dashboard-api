@@ -10,6 +10,7 @@ public class TrackDto
     public string Country { get; set; }
     public string LayoutVersion { get; set; }
 
+    public TrackDto() { }
     public TrackDto(TrackModel model)
     {
         Id = model.Id;
