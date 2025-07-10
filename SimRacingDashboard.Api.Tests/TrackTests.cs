@@ -30,7 +30,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
 
         // THEN it should return a list of all tracks as TrackDto objects, wrapped in an ApiResponse
         response.EnsureSuccessStatusCode();
-        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<TrackDto>>>();
+        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<TrackResponse>>>();
         Assert.NotNull(apiResponse);
         Assert.True(apiResponse.Success);
         Assert.NotNull(apiResponse.Data);
@@ -40,7 +40,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     public async Task Get_ById_ReturnsTrackDetails_WhenTrackExists()
     {
         // GIVEN a track exists (create one first)
-        var createDto = new CreateTrackDto
+        var createDto = new CreateTrackRequest
         {
             Name = "Test Track",
             Location = "Test City",
@@ -48,7 +48,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
         };
         var postResponse = await _client.PostAsJsonAsync("/api/track", createDto);
         postResponse.EnsureSuccessStatusCode();
-        var created = await postResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var created = await postResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         var id = created!.Data!.Id;
 
         // WHEN a GET request is made to /api/track/{id}
@@ -56,7 +56,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
 
         // THEN it should return the details of the track
         response.EnsureSuccessStatusCode();
-        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         Assert.NotNull(apiResponse);
         Assert.True(apiResponse.Success);
         Assert.Equal("Test Track", apiResponse.Data!.Name);
@@ -79,7 +79,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     public async Task Post_CreatesTrack_WhenUnique()
     {
         // GIVEN the API is running and a new, unique track is submitted
-        var createDto = new CreateTrackDto
+        var createDto = new CreateTrackRequest
         {
             Name = "Unique Track",
             Location = "Unique City",
@@ -91,7 +91,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
 
         // THEN it should create the track and return 201 Created
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         Assert.NotNull(apiResponse);
         Assert.True(apiResponse.Success);
         Assert.Equal("Track created successfully!", apiResponse.Message);
@@ -102,7 +102,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     public async Task Post_ReturnsConflict_WhenDuplicate()
     {
         // GIVEN a track already exists
-        var createDto = new CreateTrackDto
+        var createDto = new CreateTrackRequest
         {
             Name = "Duplicate Track",
             Location = "Duplicate City",
@@ -115,7 +115,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
 
         // THEN it should return 409 Conflict
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         Assert.NotNull(apiResponse);
         Assert.False(apiResponse.Success);
         Assert.Equal("Track already exists!", apiResponse.Message);
@@ -125,7 +125,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     public async Task Put_UpdatesTrack_WhenValid()
     {
         // Create a track
-        var createDto = new CreateTrackDto
+        var createDto = new CreateTrackRequest
         {
             Name = "Put Track",
             Location = "Put City",
@@ -133,11 +133,11 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
         };
         var postResponse = await _client.PostAsJsonAsync("/api/track", createDto);
         postResponse.EnsureSuccessStatusCode();
-        var created = await postResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var created = await postResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         var id = created!.Data!.Id;
 
         // Update the track
-        var updateDto = new CreateTrackDto
+        var updateDto = new CreateTrackRequest
         {
             Name = "Put Track Updated",
             Location = "Put City Updated",
@@ -148,7 +148,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
         };
         var putResponse = await _client.PutAsJsonAsync($"/api/track/{id}", updateDto);
         putResponse.EnsureSuccessStatusCode();
-        var apiResponse = await putResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var apiResponse = await putResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         Assert.NotNull(apiResponse);
         Assert.True(apiResponse.Success);
         Assert.Equal("Track updated successfully!", apiResponse.Message);
@@ -159,18 +159,18 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     public async Task Put_ReturnsConflict_WhenDuplicate()
     {
         // Create two tracks
-        var dto1 = new CreateTrackDto { Name = "PutDup1", Location = "Loc1", Country = "C1" };
-        var dto2 = new CreateTrackDto { Name = "PutDup2", Location = "Loc2", Country = "C2" };
+        var dto1 = new CreateTrackRequest { Name = "PutDup1", Location = "Loc1", Country = "C1" };
+        var dto2 = new CreateTrackRequest { Name = "PutDup2", Location = "Loc2", Country = "C2" };
         var resp1 = await _client.PostAsJsonAsync("/api/track", dto1);
         var resp2 = await _client.PostAsJsonAsync("/api/track", dto2);
-        var created2 = await resp2.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var created2 = await resp2.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         var id2 = created2!.Data!.Id;
 
         // Try to update second track to have same name/location/country as first
-        var updateDto = new CreateTrackDto { Name = "PutDup1", Location = "Loc1", Country = "C1" };
+        var updateDto = new CreateTrackRequest { Name = "PutDup1", Location = "Loc1", Country = "C1" };
         var putResponse = await _client.PutAsJsonAsync($"/api/track/{id2}", updateDto);
         Assert.Equal(HttpStatusCode.Conflict, putResponse.StatusCode);
-        var apiResponse = await putResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var apiResponse = await putResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         Assert.NotNull(apiResponse);
         Assert.False(apiResponse.Success);
         Assert.Contains("already exists", apiResponse.Message);
@@ -179,7 +179,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     [Fact]
     public async Task Put_ReturnsNotFound_WhenTrackDoesNotExist()
     {
-        var updateDto = new CreateTrackDto { Name = "NoTrack", Location = "NoLoc", Country = "NoCountry" };
+        var updateDto = new CreateTrackRequest { Name = "NoTrack", Location = "NoLoc", Country = "NoCountry" };
         var nonExistentId = Guid.NewGuid();
         var putResponse = await _client.PutAsJsonAsync($"/api/track/{nonExistentId}", updateDto);
         Assert.Equal(HttpStatusCode.NotFound, putResponse.StatusCode);
@@ -189,7 +189,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     public async Task Put_ReturnsBadRequest_WhenNullBody()
     {
         var nonExistentId = Guid.NewGuid();
-        var putResponse = await _client.PutAsJsonAsync($"/api/track/{nonExistentId}", (CreateTrackDto?)null);
+        var putResponse = await _client.PutAsJsonAsync($"/api/track/{nonExistentId}", (CreateTrackRequest?)null);
         Assert.Equal(HttpStatusCode.BadRequest, putResponse.StatusCode);
     }
 
@@ -197,14 +197,14 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     public async Task Put_AllowsEmptyStrings_And_ZeroValues()
     {
         // Create a track
-        var createDto = new CreateTrackDto { Name = "PutEmpty", Location = "PutLoc", Country = "PutCountry" };
+        var createDto = new CreateTrackRequest { Name = "PutEmpty", Location = "PutLoc", Country = "PutCountry" };
         var postResponse = await _client.PostAsJsonAsync("/api/track", createDto);
         postResponse.EnsureSuccessStatusCode();
-        var created = await postResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var created = await postResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         var id = created!.Data!.Id;
 
         // Update with empty/zero values
-        var updateDto = new CreateTrackDto
+        var updateDto = new CreateTrackRequest
         {
             Name = string.Empty,
             Location = string.Empty,
@@ -215,7 +215,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
         };
         var putResponse = await _client.PutAsJsonAsync($"/api/track/{id}", updateDto);
         putResponse.EnsureSuccessStatusCode();
-        var apiResponse = await putResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var apiResponse = await putResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         Assert.NotNull(apiResponse);
         Assert.True(apiResponse.Success);
         Assert.Equal(string.Empty, apiResponse.Data!.Name);
@@ -226,17 +226,17 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     public async Task Patch_UpdatesTrack_WhenValid()
     {
         // Create a track
-        var createDto = new CreateTrackDto { Name = "Patch Track", Location = "Patch City", Country = "Patchland" };
+        var createDto = new CreateTrackRequest { Name = "Patch Track", Location = "Patch City", Country = "Patchland" };
         var postResponse = await _client.PostAsJsonAsync("/api/track", createDto);
         postResponse.EnsureSuccessStatusCode();
-        var created = await postResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var created = await postResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         var id = created!.Data!.Id;
 
         // Patch the track
-        var patchDto = new PatchTrackDto { Name = "Patch Track Updated", Turns = 15 };
+        var patchDto = new PatchTrackRequest { Name = "Patch Track Updated", Turns = 15 };
         var patchResponse = await _client.PatchAsJsonAsync($"/api/track/{id}", patchDto);
         patchResponse.EnsureSuccessStatusCode();
-        var apiResponse = await patchResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var apiResponse = await patchResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         Assert.NotNull(apiResponse);
         Assert.True(apiResponse.Success);
         Assert.Equal("Track updated successfully!", apiResponse.Message);
@@ -248,18 +248,18 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     public async Task Patch_ReturnsConflict_WhenDuplicate()
     {
         // Create two tracks
-        var dto1 = new CreateTrackDto { Name = "PatchDup1", Location = "Loc1", Country = "C1" };
-        var dto2 = new CreateTrackDto { Name = "PatchDup2", Location = "Loc2", Country = "C2" };
+        var dto1 = new CreateTrackRequest { Name = "PatchDup1", Location = "Loc1", Country = "C1" };
+        var dto2 = new CreateTrackRequest { Name = "PatchDup2", Location = "Loc2", Country = "C2" };
         var resp1 = await _client.PostAsJsonAsync("/api/track", dto1);
         var resp2 = await _client.PostAsJsonAsync("/api/track", dto2);
-        var created2 = await resp2.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var created2 = await resp2.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         var id2 = created2!.Data!.Id;
 
         // Try to patch second track to have same name/location/country as first
-        var patchDto = new PatchTrackDto { Name = "PatchDup1", Location = "Loc1", Country = "C1" };
+        var patchDto = new PatchTrackRequest { Name = "PatchDup1", Location = "Loc1", Country = "C1" };
         var patchResponse = await _client.PatchAsJsonAsync($"/api/track/{id2}", patchDto);
         Assert.Equal(HttpStatusCode.Conflict, patchResponse.StatusCode);
-        var apiResponse = await patchResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var apiResponse = await patchResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         Assert.NotNull(apiResponse);
         Assert.False(apiResponse.Success);
         Assert.Contains("already exists", apiResponse.Message);
@@ -268,7 +268,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     [Fact]
     public async Task Patch_ReturnsNotFound_WhenTrackDoesNotExist()
     {
-        var patchDto = new PatchTrackDto { Name = "NoTrack" };
+        var patchDto = new PatchTrackRequest { Name = "NoTrack" };
         var nonExistentId = Guid.NewGuid();
         var patchResponse = await _client.PatchAsJsonAsync($"/api/track/{nonExistentId}", patchDto);
         Assert.Equal(HttpStatusCode.NotFound, patchResponse.StatusCode);
@@ -278,7 +278,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     public async Task Patch_ReturnsBadRequest_WhenNullBody()
     {
         var nonExistentId = Guid.NewGuid();
-        var patchResponse = await _client.PatchAsJsonAsync($"/api/track/{nonExistentId}", (PatchTrackDto?)null);
+        var patchResponse = await _client.PatchAsJsonAsync($"/api/track/{nonExistentId}", (PatchTrackRequest?)null);
         Assert.Equal(HttpStatusCode.BadRequest, patchResponse.StatusCode);
     }
 
@@ -286,14 +286,14 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
     public async Task Patch_AllowsEmptyStrings_And_ZeroValues()
     {
         // Create a track
-        var createDto = new CreateTrackDto { Name = "PatchEmpty", Location = "PatchLoc", Country = "PatchCountry" };
+        var createDto = new CreateTrackRequest { Name = "PatchEmpty", Location = "PatchLoc", Country = "PatchCountry" };
         var postResponse = await _client.PostAsJsonAsync("/api/track", createDto);
         postResponse.EnsureSuccessStatusCode();
-        var created = await postResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var created = await postResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         var id = created!.Data!.Id;
 
         // Patch with empty/zero values
-        var patchDto = new PatchTrackDto
+        var patchDto = new PatchTrackRequest
         {
             Turns = 5,
             LengthKm = 6
@@ -301,7 +301,7 @@ public class TrackTests : IClassFixture<CustomWebApplicationFactory<Program>>
         var patchResponse = await _client.PatchAsJsonAsync($"/api/track/{id}", patchDto);
         patchResponse.EnsureSuccessStatusCode();
 
-        var apiResponse = await patchResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsDto>>();
+        var apiResponse = await patchResponse.Content.ReadFromJsonAsync<ApiResponse<TrackDetailsResponse>>();
         Assert.NotNull(apiResponse);
         Assert.True(apiResponse.Success);
         Assert.Equal(createDto.Name, apiResponse.Data!.Name);

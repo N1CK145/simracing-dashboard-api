@@ -2,7 +2,7 @@ using System;
 
 namespace SimRacingDashboard.Api.Dtos.Track;
 
-public class PatchTrackDto
+public class PatchTrackRequest
 {
     public string? Name { get; set; }
     public string? Location { get; set; }

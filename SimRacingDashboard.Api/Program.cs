@@ -1,21 +1,21 @@
 using Microsoft.EntityFrameworkCore;
 using SimRacingDashboard.Api.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using SimRacingDashboard.Api.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-builder.Services.AddSwaggerGen();
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-    });
+builder.Services
+    .AddSwaggerWithBearerAuth()
+    .AddCustomControllers()
+    .AddDatabase(builder.Configuration)
+    .AddJwtAuthentication(builder.Configuration)
+    .AddProjectServices()
+    .AddValidators();
 
-builder.Services.AddDbContext<SimRacingDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
 var app = builder.Build();
 app.MapControllers();
@@ -27,7 +27,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "SimRacingDashboard API V1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sim-Racing Dashboard v1");
         c.RoutePrefix = string.Empty;
     });
 }

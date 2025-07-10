@@ -3,9 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using SimRacingDashboard.Api.Dtos;
 using SimRacingDashboard.Api.Data;
 using SimRacingDashboard.Api.Dtos.Track;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SimRacingDashboard.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class TrackController : ControllerBase
@@ -21,8 +23,8 @@ namespace SimRacingDashboard.Api.Controllers
         public async Task<IActionResult> Get()
         {
             var tracks = await db.Tracks.ToListAsync();
-            var tracksDtos = tracks.Select(t => new TrackDto(t));
-            return Ok(ApiResponse<IEnumerable<TrackDto>>.Ok(tracksDtos));
+            var tracksDtos = tracks.Select(t => new TrackResponse(t));
+            return Ok(ApiResponse<IEnumerable<TrackResponse>>.Ok(tracksDtos));
         }
 
         [HttpGet("{id}")]
@@ -33,34 +35,34 @@ namespace SimRacingDashboard.Api.Controllers
             if (track == null)
                 return NotFound();
 
-            return Ok(ApiResponse<TrackDetailsDto>.Ok(new TrackDetailsDto(track)));
+            return Ok(ApiResponse<TrackDetailsResponse>.Ok(new TrackDetailsResponse(track)));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(CreateTrackDto newTrack)
+        public async Task<IActionResult> Post(CreateTrackRequest newTrack)
         {
             var trackExists = await db.Tracks.AnyAsync(existing => existing.Name == newTrack.Name && existing.Location == newTrack.Location && existing.Country == newTrack.Country);
 
             if (trackExists)
-                return Conflict(ApiResponse<TrackDetailsDto>.Fail("Track already exists!"));
+                return Conflict(ApiResponse<TrackDetailsResponse>.Fail("Track already exists!"));
 
             var entity = await db.Tracks.AddAsync(newTrack.ToModel());
             await db.SaveChangesAsync();
 
-            var dto = new TrackDetailsDto(entity.Entity);
+            var dto = new TrackDetailsResponse(entity.Entity);
 
             return CreatedAtAction(
                 nameof(Get),
                 new { id = dto.Id },
-                ApiResponse<TrackDetailsDto>.Ok(dto, "Track created successfully!")
+                ApiResponse<TrackDetailsResponse>.Ok(dto, "Track created successfully!")
             );
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(Guid id, CreateTrackDto updatedTrack)
+        public async Task<IActionResult> Put(Guid id, CreateTrackRequest updatedTrack)
         {
             if (updatedTrack == null)
-                return BadRequest(ApiResponse<TrackDetailsDto>.Fail("Invalid track data!"));
+                return BadRequest(ApiResponse<TrackDetailsResponse>.Fail("Invalid track data!"));
 
             var track = await db.Tracks.FindAsync(id);
 
@@ -75,7 +77,7 @@ namespace SimRacingDashboard.Api.Controllers
                 existing.Country == updatedTrack.Country);
 
             if (trackExists)
-                return Conflict(ApiResponse<TrackDetailsDto>.Fail("Track with the same name, location, and country already exists!"));
+                return Conflict(ApiResponse<TrackDetailsResponse>.Fail("Track with the same name, location, and country already exists!"));
 
             // Update the track properties
             track.LengthKm = updatedTrack.LengthKm;
@@ -88,14 +90,14 @@ namespace SimRacingDashboard.Api.Controllers
             db.Tracks.Update(track);
             await db.SaveChangesAsync();
 
-            return Ok(ApiResponse<TrackDetailsDto>.Ok(new TrackDetailsDto(track), "Track updated successfully!"));
+            return Ok(ApiResponse<TrackDetailsResponse>.Ok(new TrackDetailsResponse(track), "Track updated successfully!"));
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> Patch(Guid id, PatchTrackDto patch)
+        public async Task<IActionResult> Patch(Guid id, PatchTrackRequest patch)
         {
             if (patch == null)
-                return BadRequest(ApiResponse<TrackDetailsDto>.Fail("Invalid track data!"));
+                return BadRequest(ApiResponse<TrackDetailsResponse>.Fail("Invalid track data!"));
 
             var track = await db.Tracks.FindAsync(id);
 
@@ -129,12 +131,26 @@ namespace SimRacingDashboard.Api.Controllers
                 existing.LayoutVersion == track.LayoutVersion);
 
             if (trackExists)
-                return Conflict(ApiResponse<TrackDetailsDto>.Fail("Track with the same name, location, and country already exists!"));
+                return Conflict(ApiResponse<TrackDetailsResponse>.Fail("Track with the same name, location, and country already exists!"));
 
             db.Tracks.Update(track);
             await db.SaveChangesAsync();
 
-            return Ok(ApiResponse<TrackDetailsDto>.Ok(new TrackDetailsDto(track), "Track updated successfully!"));
+            return Ok(ApiResponse<TrackDetailsResponse>.Ok(new TrackDetailsResponse(track), "Track updated successfully!"));
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var track = await db.Tracks.FindAsync(id);
+
+            if (track == null)
+                return NotFound();
+
+            db.Tracks.Remove(track);
+            await db.SaveChangesAsync();
+
+            return Ok(ApiResponse<TrackDetailsResponse>.Ok(new TrackDetailsResponse(track), "Track deleted successfully!"));
         }
     }
 }

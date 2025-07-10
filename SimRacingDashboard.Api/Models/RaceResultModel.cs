@@ -13,5 +13,5 @@ public class RaceResultModel
     public string BestLap { get; set; }      // e.g. "1:30,399"
     public string TotalTime { get; set; }    // e.g. "40:01,709" or "+0,387"
     public int Points { get; set; }
-    public F1DriveType DriverType { get; set; }   // e.g. "Spieler:in"
+    public RaceDriverType DriverType { get; set; }   // e.g. "Spieler:in"
 }

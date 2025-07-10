@@ -2,7 +2,7 @@ using SimRacingDashboard.Api.Models;
 
 namespace SimRacingDashboard.Api.Dtos.Track;
 
-public class TrackDetailsDto
+public class TrackDetailsResponse
 {
     public Guid Id { get; set; }
     public string Name { get; set; }
@@ -12,8 +12,8 @@ public class TrackDetailsDto
     public int? Turns { get; set; }
     public double? LengthKm { get; set; }
 
-    public TrackDetailsDto() { }
-    public TrackDetailsDto(TrackModel model)
+    public TrackDetailsResponse() { }
+    public TrackDetailsResponse(TrackModel model)
     {
         Id = model.Id;
         Name = model.Name;

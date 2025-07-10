@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SimRacingDashboard.Api.Data;
@@ -11,9 +12,11 @@ using SimRacingDashboard.Api.Data;
 namespace SimRacingDashboard.Api.Migrations
 {
     [DbContext(typeof(SimRacingDbContext))]
-    partial class SimRacingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250710153748_Add User")]
+    partial class AddUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

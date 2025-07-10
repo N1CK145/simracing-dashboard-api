@@ -8,4 +8,5 @@ public class SimRacingDbContext : DbContext
     public SimRacingDbContext(DbContextOptions<SimRacingDbContext> options) : base(options) { }
 
     public DbSet<TrackModel> Tracks => Set<TrackModel>();
+    public DbSet<EncryptedUserModel> Users => Set<EncryptedUserModel>();
 }

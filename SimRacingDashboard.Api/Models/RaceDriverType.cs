@@ -1,6 +1,6 @@
 namespace SimRacingDashboard.Api.Models;
 
-public enum F1DriveType
+public enum RaceDriverType
 {
     Player, Bot
 }
