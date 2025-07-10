@@ -23,7 +23,7 @@ public class CustomWebApplicationFactory<TStartup> : WebApplicationFactory<TStar
                 services.Remove(descriptor);
             }
 
-            services.AddDbContext<SimRacingDbContext>(options => options.UseInMemoryDatabase("TestDb"));
+            services.AddDbContext<SimRacingDbContext>(options => options.UseInMemoryDatabase("TestDatabase"));
         });
     }
 }

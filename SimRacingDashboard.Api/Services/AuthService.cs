@@ -28,6 +28,7 @@ public class AuthService
     public async Task<string?> LoginAsync(string email, string password)
     {
         var encryptedEmail = _encryptionService.Encrypt(email.ToLowerInvariant());
+        var users = context.Users.ToList();
         var user = await context.Users.Where(user => user.EncryptedEmail == encryptedEmail).FirstOrDefaultAsync();
 
         if (user == null)
@@ -98,7 +99,7 @@ public class AuthService
         return user.Decrypt(_encryptionService);
     }
 
-    private string GenerateJwt(UserModel user)
+    public string GenerateJwt(UserModel user)
     {
         var keyBytes = Encoding.UTF8.GetBytes(_config["Jwt:Key"]!);
         var base64Key = Convert.ToBase64String(keyBytes);
